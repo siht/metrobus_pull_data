@@ -44,14 +44,16 @@ def filter_json_raw_data(data):
    '''
     metrobuses_data = json.loads(data, parse_float=decimal.Decimal)
 
-    return list(map(
-        (lambda elem: {
-            'serie': elem['fields']['vehicle_id'],
-            'latitude': elem['fields']['geographic_point'][0],
-            'longitude': elem['fields']['geographic_point'][1],
-            'date_time': elem['fields']['date_updated']}
-        ),
-        metrobuses_data['records'])
+    return list(
+        map(
+            lambda elem: {
+                'serie': elem['fields']['vehicle_id'],
+                'latitude': elem['fields']['geographic_point'][0],
+                'longitude': elem['fields']['geographic_point'][1],
+                'date_time': elem['fields']['date_updated']
+            },
+            metrobuses_data['records']
+        )
     )
 
 
