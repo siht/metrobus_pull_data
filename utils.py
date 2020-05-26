@@ -1,8 +1,12 @@
 import pandas as pd
+from sqlalchemy import create_engine
+
+from config import DATABASES
 
 __all__ = (
     'construct_engine_string',
     'create_historical_points',
+    'get_engine'
 )
 
 
@@ -19,6 +23,12 @@ def construct_engine_string(db_config):
             port=db_config['PORT'],
             database=db_config['NAME'],
         )
+
+
+def get_engine():
+    metrobus_database_conf = DATABASES['metrobuses']
+    metrobus_engine_string = construct_engine_string(metrobus_database_conf)
+    return create_engine(metrobus_engine_string)
 
 
 def create_metrobuses_if_doesnt_exist(engine, data):
