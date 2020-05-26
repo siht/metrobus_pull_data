@@ -1,3 +1,6 @@
+import decimal
+import json
+
 import pandas as pd
 from sqlalchemy import create_engine
 
@@ -6,7 +9,8 @@ from config import DATABASES
 __all__ = (
     'construct_engine_string',
     'create_historical_points',
-    'get_engine'
+    'filter_json_raw_data',
+    'get_engine',
 )
 
 
@@ -26,9 +30,29 @@ def construct_engine_string(db_config):
 
 
 def get_engine():
+    '''
+    return a preconfigured sqlalchemy engine
+    '''
     metrobus_database_conf = DATABASES['metrobuses']
     metrobus_engine_string = construct_engine_string(metrobus_database_conf)
     return create_engine(metrobus_engine_string)
+
+
+def filter_json_raw_data(data):
+    '''
+    return a dictionary with necesary values for update databas
+   '''
+    metrobuses_data = json.loads(data, parse_float=decimal.Decimal)
+
+    return list(map(
+        (lambda elem: {
+            'serie': elem['fields']['vehicle_id'],
+            'latitude': elem['fields']['geographic_point'][0],
+            'longitude': elem['fields']['geographic_point'][1],
+            'date_time': elem['fields']['date_updated']}
+        ),
+        metrobuses_data['records'])
+    )
 
 
 def create_metrobuses_if_doesnt_exist(engine, data):
