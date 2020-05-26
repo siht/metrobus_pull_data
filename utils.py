@@ -45,3 +45,45 @@ def create_metrobuses_if_doesnt_exist(engine, data):
         df_new_metrobuses['id'] = new_ids
         df_new_metrobuses = df_new_metrobuses.set_index('id')
         df_new_metrobuses.to_sql('metrobus_history_metrobus', engine, if_exists='append')
+
+def create_places_if_doesnt_exist(engine, data):
+    '''
+    create new place registers in db if contains some new
+    '''
+    df_saved_places = (
+        pd.read_sql_table('metrobus_history_place', engine)
+    )
+    df_fetched_places = (
+        pd.DataFrame(
+            map(
+                (
+                    lambda elem: {
+                        'latitude': elem['latitude'],
+                        'longitude': elem['longitude'],
+                    }
+                ),
+                data
+            )
+        )
+    )
+    df_new_places = (
+        df_saved_places
+        .merge(
+            df_fetched_places,
+            on=['latitude', 'longitude'],
+            how='right'
+        )
+    )
+    theres_new_places = not df_new_places.empty
+    if(theres_new_places):
+        last_id = (
+            not df_saved_places.empty
+            and df_saved_places.groupby('id').tail(1)
+            or -1
+        )
+        current_id = last_id + 1
+        next_new_id = current_id + len(df_new_places)
+        new_ids = pd.Series(range(current_id, next_new_id))
+        df_new_places['id'] = new_ids
+        df_new_places = df_new_places.set_index('id')
+        df_new_places.to_sql('metrobus_history_place', engine, if_exists='append')
