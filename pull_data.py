@@ -1,5 +1,8 @@
 from urllib.request import urlopen
 
+from celery import Celery
+from celery.schedules import crontab
+
 from config import METROBUSES_API_URL
 from utils import (
     get_engine,
@@ -8,6 +11,19 @@ from utils import (
 )
 
 
+app = Celery('pull_data', broker='pyamqp://guest@0.0.0.0//')
+
+@app.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    every_hour_after_1_minute = crontab(hour='*', minute=1)
+    every_minute = crontab(minute='*')
+    sender.add_periodic_task(
+        every_minute,
+        get_new_data.s(),
+    )
+
+
+@app.task
 def get_new_data():
     engine = get_engine()
     metrobuses_raw_data = urlopen(METROBUSES_API_URL).read()
