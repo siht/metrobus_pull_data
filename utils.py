@@ -3,6 +3,8 @@ import json
 
 import pandas as pd
 from sqlalchemy import create_engine
+from sqlalchemy.sql import text
+from shapely.geometry import Polygon, Point
 
 from config import DATABASES
 
@@ -90,7 +92,7 @@ def create_metrobuses_if_doesnt_exist(engine, data):
                 ' ORDER BY id DESC LIMIT 1;'
             ).fetchone()
         )
-        last_id = last_id[0] if last_id else -1
+        last_id = last_id[0] if last_id else 0
         current_id = last_id + 1
         next_new_id = current_id + len(df_new_metrobuses)
         new_ids = pd.Series(range(current_id, next_new_id))
@@ -153,12 +155,16 @@ def create_places_if_doesnt_exist(engine, data):
                 ' ORDER BY id DESC LIMIT 1;'
             ).fetchone()
         )
-        last_id = last_id[0] if last_id else -1
+        last_id = last_id[0] if last_id else 0
         current_id = last_id + 1
         next_new_id = current_id + len(df_new_places)
         new_ids = pd.Series(range(current_id, next_new_id))
         df_new_places['id'] = new_ids
         df_new_places = df_new_places.set_index('id')
+        df_new_places['district_id'] = df_new_places.apply(
+            get_district_id,
+            axis=1
+        )
         df_new_places.to_sql(
             'metrobus_history_place',
             engine,
@@ -195,11 +201,11 @@ def create_historical_points(engine, data):
         ).fetchone()
     )
     last_id_historical_point = (
-        last_id_historical_point[0] if last_id_historical_point else -1
+        last_id_historical_point[0] if last_id_historical_point else 0
     )
     current_id_historical_point = last_id_historical_point + 1
     next_id_historical_point = (
-        current_id_historical_point + df_origin_data.count()
+        current_id_historical_point + len(df_origin_data)
     )
     new_ids = (
         pd.Series(
@@ -213,3 +219,38 @@ def create_historical_points(engine, data):
         engine,
         if_exists='append'
     )
+
+
+def in_what_district_is_this_point(latitude, longitude, areas={}):
+    '''
+    get the id of mexico city districts based on latitude and
+    longitude
+    '''
+    engine = get_engine()
+    districts_with_id = (engine.execute(
+        'SELECT name, id FROM metrobus_history_district;'
+    ).fetchall())
+    point_place = Point((latitude, longitude))
+    for district_name, district_id in districts_with_id:
+        if district_id not in areas:
+            sql_consult = text(
+                'SELECT latitude, longitude '
+                'FROM metrobus_history_districtlimitpoints '
+                'WHERE district_id = :id;'
+            )
+            areas[district_id] = Polygon(
+                engine.execute(
+                    sql_consult,
+                    id=district_id
+                ).fetchall()
+            )
+        if areas[district_id].contains(point_place):
+            return district_id
+    return pd.NA
+
+
+def get_district_id(row):
+    '''
+    wrapper of in_what_district_is_this_point for use with pandas
+    '''
+    return in_what_district_is_this_point(row['latitude'], row['longitude'])
