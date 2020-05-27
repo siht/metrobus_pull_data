@@ -1,16 +1,22 @@
+from environs import Env
+
 __all__ = (
     'DATABASES',
     'METROBUSES_API_URL',
 )
 
+
+env = Env()
+env.read_env()
+
 DATABASES = {
     'metrobuses':{
-        'NAME': 'buses',
-        'USER': 'django',
-        'PASSWORD': '12345678',
-        'HOST': '0.0.0.0',
-        'PORT': 5433,
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': env('DB_HOST'),
+        'PORT': env('DB_PORT'),
     },
 }
 
-METROBUSES_API_URL = 'https://datos.cdmx.gob.mx/api/records/1.0/search/?dataset=prueba_fetchdata_metrobus&q='
+METROBUSES_API_URL = env('METROBUSES_API_URL')
