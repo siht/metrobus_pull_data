@@ -96,7 +96,8 @@ def create_metrobuses_if_doesnt_exist(engine, data):
         current_id = last_id + 1
         next_new_id = current_id + len(df_new_metrobuses)
         new_ids = pd.Series(range(current_id, next_new_id))
-        df_new_metrobuses['id'] = new_ids
+        df_new_metrobuses.reset_index(drop=True, inplace=True)
+        df_new_metrobuses.loc[:, 'id'] = new_ids
         df_new_metrobuses = df_new_metrobuses.set_index('id')
         df_new_metrobuses.to_sql(
             'metrobus_history_metrobus',
@@ -159,6 +160,8 @@ def create_places_if_doesnt_exist(engine, data):
         current_id = last_id + 1
         next_new_id = current_id + len(df_new_places)
         new_ids = pd.Series(range(current_id, next_new_id))
+        df_new_places.reset_index(drop=True, inplace=True)
+        df_new_places.loc[:, 'id'] = new_ids
         df_new_places['id'] = new_ids
         df_new_places = df_new_places.set_index('id')
         df_new_places['district_id'] = df_new_places.apply(
@@ -213,7 +216,8 @@ def create_historical_points(engine, data):
             range(current_id_historical_point, next_id_historical_point)
         )
     )
-    df_origin_data['id'] = new_ids
+    df_origin_data.reset_index(drop=True, inplace=True)
+    df_origin_data.loc[:, 'id'] = new_ids
     df_origin_data = df_origin_data.set_index('id')
     df_origin_data.to_sql(
         'metrobus_history_historicalpoint',
