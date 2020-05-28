@@ -16,9 +16,8 @@ app = Celery('pull_data', broker='pyamqp://guest@0.0.0.0//')
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     every_hour_after_1_minute = crontab(hour='*', minute=1)
-    every_5_minute = crontab(minute='*/5')
     sender.add_periodic_task(
-        every_5_minute,
+        every_hour_after_1_minute,
         get_new_data.s(),
     )
 
