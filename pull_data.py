@@ -3,7 +3,10 @@ from urllib.request import urlopen
 from celery import Celery
 from celery.schedules import crontab
 
-from config import METROBUSES_API_URL
+from config import (
+    BROKER,
+    METROBUSES_API_URL,
+)
 from utils import (
     get_engine,
     filter_json_raw_data,
@@ -11,7 +14,7 @@ from utils import (
 )
 
 
-app = Celery('pull_data', broker='pyamqp://guest@0.0.0.0//')
+app = Celery('pull_data', broker=BROKER)
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
