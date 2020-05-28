@@ -173,6 +173,11 @@ def create_places_if_doesnt_exist(engine, data):
             engine,
             if_exists='append'
         )
+        df_new_places.drop(
+            ['district_id'],
+            axis=1,
+            inplace=True
+        )
         return pd.concat((df_new_places, df_already_registered_places,))
     return df_already_registered_places
 
