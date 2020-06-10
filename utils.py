@@ -197,7 +197,6 @@ def create_historical_points(engine, data):
     df_origin_data = (
         df_origin_data.merge(df_places, on=['latitude', 'longitude'])
     )
-    print(df_origin_data)
     df_origin_data.drop(
         ['serie', 'latitude', 'longitude'],
         axis=1,
